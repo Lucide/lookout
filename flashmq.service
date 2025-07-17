@@ -1,0 +1,14 @@
+[Unit]
+Description=FlashMQ MQTT server
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/flashmq -c %h/.config/flashmq/flashmq.conf
+LimitNOFILE=infinity
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=default.target
+

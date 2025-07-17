@@ -1,0 +1,9 @@
+{
+    "name": "Lookout",
+    "description": "Blacks out the screen on command",
+    "uuid": "lookout@mirolang.org",
+    "settings-schema": "org.gnome.shell.extensions.lookout",
+    "shell-version": [
+        "48"
+    ]
+}

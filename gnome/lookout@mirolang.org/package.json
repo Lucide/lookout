@@ -1,0 +1,30 @@
+{
+  "name": "lookout",
+  "version": "0.1.0",
+  "description": "Blacks out the screen on command",
+  "type": "module",
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lucide/lookout.git"
+  },
+  "author": "Alvise Bruniera <alvisebruniera@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Lucide/lookout/issues"
+  },
+  "homepage": "https://github.com/Lucide/lookout#readme",
+  "devDependencies": {
+    "eslint": "^9.31.0",
+    "eslint-plugin-jsdoc": "^51.4.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@girs/gjs": "4.0.0-beta.25",
+    "@girs/gnome-shell": "^48.0.2"
+  }
+}

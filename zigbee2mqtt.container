@@ -1,0 +1,20 @@
+[Unit]
+Description=Bridge from zigbee to mqtt
+After=flashmq.service
+Requires=flashmq.service
+
+[Container]
+AddDevice=/dev/serial/by-id/usb-1a86_USB_Serial-if00-port0:/dev/ttyUSB0
+ContainerName=zigbee2mqtt
+Environment=TZ=Europe/Amsterdam
+GroupAdd=keep-groups
+Image=ghcr.io/koenkk/zigbee2mqtt
+PublishPort=8080:8080
+Volume=./%h/.var/zigbee2mqtt/data:/app/data:z
+Volume=/run/user/1000/flashmq.sock:/run/user/1000/flashmq.sock:z
+Volume=/run/udev:/run/udev:ro
+Annotation=run.oci.keep_original_groups=1
+SecurityLabelDisable=true
+
+[Service]
+Restart=always

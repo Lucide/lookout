@@ -1,0 +1,8 @@
+.*
+gnome/lookout@mirolang.org/dist
+gnome/lookout@mirolang.org/node_modules
+gnome/lookout@mirolang.org/build
+gnome/lookout@mirolang.org/schemas/gschemas.compiled
+
+# Exceptions
+!.gitignore

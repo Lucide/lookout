@@ -1,0 +1,12 @@
+#!/bin/sh
+
+TOPIC='zigbee2mqtt/<device ieee address>'
+SOCKET='/run/user/1000/flashmq.sock'
+
+mosquitto_sub --unix $SOCKET -t $TOPIC --nodelay | while read MSG; do
+    if [ "$(echo $MSG | grep '"contact"\s*:\s*false')" ]; then
+        # echo "black"
+        # gnome-extensions enable janitor@mirolang.org
+        dbus-send --session --type=method_call --dest=org.mirolang.Lookout /org/mirolang/Lookout org.mirolang.Lookout.Hide
+    fi
+done

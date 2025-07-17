@@ -1,0 +1,14 @@
+[Unit]
+Description=Lookout services
+After=flashmq.service zigbee2mqtt.service
+Requires=flashmq.service zigbee2mqtt.service
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/lookout
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=default.target
+
