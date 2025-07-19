@@ -15,7 +15,7 @@ dist/extension.js dist/prefs.js: *.ts node_modules  tsconfig.json
 schemas/gschemas.compiled: schemas/org.gnome.shell.extensions.$(NAME).gschema.xml
 	glib-compile-schemas schemas
 
-build/$(NAME).zip: dist/extension.js dist/prefs.js schemas/gschemas.compiled metadata.json
+build/$(NAME).zip: dist/extension.js dist/prefs.js dist/cloak.js schemas/gschemas.compiled metadata.json
 	@mkdir -p build
 	@rm -f dist/schemas/*
 	@cp -r schemas dist/

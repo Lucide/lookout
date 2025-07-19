@@ -15,6 +15,7 @@
     ],
     "files": [
         "extension.ts",
-        "prefs.ts"
+        "prefs.ts",
+        "cloak.ts"
     ],
 }

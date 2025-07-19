@@ -16,5 +16,10 @@
       <summary>Reveal the screen</summary>
       <description>Reveal the screen hidden by the Lookout extension</description>
 		</key>
+    <key name="hide-shortcut" type="as">
+			<default><![CDATA[ ['<Super><Shift>F11'] ]]></default>
+      <summary>Hide the screen</summary>
+      <description>Hide the screen and the cursor</description>
+		</key>
   </schema>
 </schemalist>
