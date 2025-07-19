@@ -2,7 +2,8 @@ import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import Clutter from 'gi://Clutter';
 import Meta from 'gi://Meta';
-// import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import Shell from 'gi://Shell';
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
 
 /**
@@ -17,14 +18,14 @@ enum Status {
  * DBus proxy object
  */
 class Service {
-    _status: Status;
-    _actor: Clutter.Actor;
-    _compositor: Meta.Compositor;
-    _cursorTracker: Meta.CursorTracker;
-    _effect: Clutter.BrightnessContrastEffect;
-    _exportedObject?: Gio.DBusExportedObject;
-    _ownerId: number;
-    _cursorWatcherId = 0;
+    private status: Status;
+    private actor: Clutter.Actor;
+    private compositor: Meta.Compositor;
+    private cursorTracker: Meta.CursorTracker;
+    private effect: Clutter.BrightnessContrastEffect;
+    private exportedObject?: Gio.DBusExportedObject;
+    private ownerId: number;
+    private cursorWatcherId = 0;
 
     /**
      * Creates the objects and exports it on the DBus session bus
@@ -41,24 +42,24 @@ class Service {
         compositor: Meta.Compositor,
         cursorTracker: Meta.CursorTracker,
     ) {
-        this._status = Status.visible;
-        this._actor = actor;
-        this._compositor = compositor;
-        this._cursorTracker = cursorTracker;
+        this.status = Status.visible;
+        this.actor = actor;
+        this.compositor = compositor;
+        this.cursorTracker = cursorTracker;
 
         // Create the effect only once
-        this._effect = new Clutter.BrightnessContrastEffect();
-        this._effect.set_brightness(-1);
-        this._effect.set_contrast(0);
+        this.effect = new Clutter.BrightnessContrastEffect();
+        this.effect.set_brightness(-1);
+        this.effect.set_contrast(0);
 
         // Own the well-known name on the session bus
-        this._ownerId = Gio.DBus.own_name(
+        this.ownerId = Gio.DBus.own_name(
             Gio.BusType.SESSION,
             'org.mirolang.Lookout',
             Gio.BusNameOwnerFlags.NONE,
-            this._onBusAcquired.bind(this),
-            this._onNameAcquired.bind(this),
-            this._onNameLost.bind(this));
+            this.onBusAcquired.bind(this),
+            this.onNameAcquired.bind(this),
+            this.onNameLost.bind(this));
     }
 
     /**
@@ -68,8 +69,8 @@ class Service {
         // Fix the screen
         this.Reveal();
         // Close DBus
-        this._exportedObject?.unexport();
-        Gio.bus_unown_name(this._ownerId);
+        this.exportedObject?.unexport();
+        Gio.bus_unown_name(this.ownerId);
         console.debug('Lookout [debug]: closing');
     }
 
@@ -86,11 +87,11 @@ class Service {
      * @param {Gio.DBusConnection} connection - the connection to the bus
      * @param {String} _name - the name requested
      */
-    _onBusAcquired(connection: Gio.DBusConnection, _name: String) {
+    private onBusAcquired(connection: Gio.DBusConnection, _name: String) {
         console.debug(`Lookout [debug]: DBus connection "${connection.get_unique_name()}" acquired`);
         // Make the object available before obtaining the well-known name
-        this._exportedObject = Gio.DBusExportedObject.wrapJSObject(this.interfaceSchema, this);
-        this._exportedObject.export(connection, "/org/mirolang/Lookout");
+        this.exportedObject = Gio.DBusExportedObject.wrapJSObject(this.interfaceSchema, this);
+        this.exportedObject.export(connection, '/org/mirolang/Lookout');
     }
 
     /**
@@ -99,8 +100,8 @@ class Service {
      * @param {Gio.DBusConnection} connection - the connection to the bus
      * @param {String} _name - the name requested
      */
-    _onNameAcquired(_connection: Gio.DBusConnection, _name: String) {
-        console.debug('Lookout [debug]: DBus name "org.mirolang.Lookout" acquired');
+    private onNameAcquired(_connection: Gio.DBusConnection, _name: String) {
+        console.debug('Lookout [debug]: DBus name "org.mirolang.Lookout" acquired (DBus ready)');
         // Nothing to do
     }
 
@@ -112,7 +113,7 @@ class Service {
      * @param {Gio.DBusConnection} connection - the connection to the bus
      * @param {String} _name - the name requested
      */
-    _onNameLost(_connection: Gio.DBusConnection, _name: String) {
+    private onNameLost(_connection: Gio.DBusConnection, _name: String) {
         console.error('Lookout [Error]: DBus name "org.mirolang.Lookout" busy');
         // Nothing we can do
     }
@@ -122,7 +123,7 @@ class Service {
      * 
      * @param {Meta.CursorTracker} tracker - the cursor tracker being watched
      */
-    _onVisibilityChanged(tracker: Meta.CursorTracker) {
+    private onVisibilityChanged(tracker: Meta.CursorTracker) {
         // Make the pointer invisible, but only if made visible by something else
         if (tracker.get_pointer_visible()) {
             tracker.set_pointer_visible(false);
@@ -154,7 +155,7 @@ class Service {
      */
     get Status() {
         console.debug('Lookout [debug]: Status read');
-        return this._status;
+        return this.status;
     }
 
     /**
@@ -169,17 +170,22 @@ class Service {
      */
     Hide() {
         console.debug('Lookout [debug]: Hide() invoked');
-        if (this._status === Status.visible) {
-            this._status = Status.hidden;
-            this._compositor.disable_unredirect();
-            this._actor.add_effect(this._effect);
-            this._cursorWatcherId = this._cursorTracker.connect(
-                "visibility-changed",
-                this._onVisibilityChanged.bind(this));
-            this._cursorTracker.set_pointer_visible(false);
-            this._exportedObject?.emit_property_changed(
-                "Status",
-                GLib.Variant.new_uint32(this._status));
+        // Do nothing if already hidden
+        if (this.status === Status.visible) {
+            this.status = Status.hidden;
+            // Disable unredirect
+            this.compositor.disable_unredirect();
+            // Black out the screen
+            this.actor.add_effect(this.effect);
+            // Make cursor permanently invisible
+            this.cursorWatcherId = this.cursorTracker.connect(
+                'visibility-changed',
+                this.onVisibilityChanged.bind(this));
+            this.cursorTracker.set_pointer_visible(false);
+            // Signal Status changed
+            this.exportedObject?.emit_property_changed(
+                'Status',
+                GLib.Variant.new_uint32(this.status));
         }
     }
 
@@ -194,14 +200,19 @@ class Service {
      */
     Reveal() {
         console.debug('Lookout [debug]: Reveal() invoked');
-        if (this._status === Status.hidden) {
-            this._status = Status.visible;
-            this._compositor.enable_unredirect();
-            this._actor.remove_effect(this._effect);
-            this._cursorTracker.disconnect(this._cursorWatcherId)
-            this._exportedObject?.emit_property_changed(
-                "Status",
-                GLib.Variant.new_uint32(this._status));
+        // Do nothing if already visible
+        if (this.status === Status.hidden) {
+            this.status = Status.visible;
+            // Reenable unredirect
+            this.compositor.enable_unredirect();
+            // Reveal the screen
+            this.actor.remove_effect(this.effect);
+            // Stop keeping the cursor hidden
+            this.cursorTracker.disconnect(this.cursorWatcherId)
+            // Signal Status changed
+            this.exportedObject?.emit_property_changed(
+                'Status',
+                GLib.Variant.new_uint32(this.status));
         }
     }
 }
@@ -210,10 +221,10 @@ class Service {
  * Main extension class
  */
 export default class Lookout extends Extension {
-    gsettings?: Gio.Settings;
-    service?: Service;
-    _display = global.display;
-    _settings = global.settings;
+    private gsettings?: Gio.Settings;
+    private service?: Service;
+    private windowManager = Main.wm;
+    private keyBindingAction = 0;
 
     /**
      * Invoked when the extension is enabled
@@ -223,17 +234,35 @@ export default class Lookout extends Extension {
      */
     enable() {
         console.debug('Lookout [debug]: Enabling');
+        // Create the service immediately, so the DBus object is available as soon as possible 
         this.service = new Service(
             global.stage,
             global.compositor,
             global.backend.get_cursor_tracker());
-        // this.gsettings = this.getSettings();
-        // this._display.add_keybinding(
-        //     "Lookout Reveal",
-        //     this.gsettings.,
-        //     Meta.KeyBindingFlags.CUSTOM_TRIGGER,
-        //     () => { this.service?.Reveal() })
-        // this.animationsEnabled = this.gsettings!.get_value('padding-inner').deepUnpack() ?? 8
+        console.debug('Lookout [debug]: Service creates, DBus might not be acquired yet');
+
+        // If there's a mistake in metadata.json or gschema, getting settings might fail
+        // this try-catch is for debugging, not for error recovery
+        try {
+            this.gsettings = this.getSettings();
+            console.debug('Lookout [debug]: Fetched prefs GSettings object');
+        } catch (error) {
+            console.error(`Lookout [error]: Failed to fetch prefs GSettings object: ${error}`);
+        }
+
+        // If it didn't fail, set the keybinding
+        if (this.gsettings != null) {
+            console.debug(`Lookout [debug]: Fetch shortcut: ${this.gsettings.get_value('reveal-shortcut')?.deepUnpack()} (might change later)`);
+            this.keyBindingAction = this.windowManager.addKeybinding(
+                'reveal-shortcut',
+                this.gsettings,
+                Meta.KeyBindingFlags.NONE,                  // No special requirements
+                Shell.ActionMode.ALL,                       // Always available
+                this.service.Reveal.bind(this.service));    // Run Reveal when pressed
+            console.debug(`Lookout [debug]: Shortcut registered with ID ${this.keyBindingAction}`);
+        } else {
+            console.error(`Lookout [error]: Failed to register shortcut, prefs not set`);
+        }
     }
 
     /**
@@ -244,7 +273,11 @@ export default class Lookout extends Extension {
      */
     disable() {
         console.debug('Lookout [debug]: Disabling');
-        // this.gsettings = undefined;
+        // Remove keybinding
+        this.windowManager.removeKeybinding('reveal-shortcut');
+        // Destroy settings
+        this.gsettings = undefined;
+        // Close and destroy service
         this.service?.close();
         this.service = undefined;
     }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <schemalist>
   <schema id="org.gnome.shell.extensions.lookout" path="/org/gnome/shell/extensions/lookout/">
-    <key name="padding-inner" type="i">
+    <!-- <key name="padding-inner" type="i">
       <default>8</default>
       <summary>Inner padding</summary>
       <description>Padding between windows</description>
@@ -10,9 +10,11 @@
       <default>true</default>
       <summary>Animation</summary>
       <description>Whether to animate window movement/resizing</description>
-    </key>
-    <!-- <key name="shortcut" type="as">
-			<default><![CDATA[['<Shift><Super>F11']]]></default>
-		</key> -->
+    </key> -->
+    <key name="reveal-shortcut" type="as">
+			<default><![CDATA[ ['<Super><Shift>F12'] ]]></default>
+      <summary>Reveal the screen</summary>
+      <description>Reveal the screen hidden by the Lookout extension</description>
+		</key>
   </schema>
 </schemalist>
