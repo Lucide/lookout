@@ -9,7 +9,7 @@ all: dist/extension.js
 node_modules: package.json
 	npm install
 
-dist/extension.js dist/prefs.js: *.ts node_modules  tsconfig.json
+dist/extension.js dist/prefs.js dist/cloak.js: *.ts node_modules  tsconfig.json
 	- npx tsc
 
 schemas/gschemas.compiled: schemas/org.gnome.shell.extensions.$(NAME).gschema.xml

@@ -71,6 +71,57 @@ export default class Cloak {
         console.debug('Lookout [debug]: closing');
     }
 
+    /**
+     * Implementation of the reveal logic.
+     * 
+     * It is not intended to be called directly,
+     * only by the public Reveal and Toggle methods.
+     * 
+     * It also re-enables unredirect for performance and untracks 
+     * the visibility changes in the cursor so it can keep.
+     */
+    private revealImpl() {
+        this.status = Status.visible;
+        // Reenable unredirect
+        this.compositor.enable_unredirect();
+        // Reveal the screen
+        this.actor.remove_effect(this.effect);
+        // Stop keeping the cursor hidden
+        this.cursorTracker.disconnect(this.cursorWatcherId)
+        // Signal Status changed
+        this.exportedObject?.emit_property_changed(
+            'Status',
+            GLib.Variant.new_uint32(this.status));
+
+    }
+
+    /**
+     * Implementation of the hide logic.
+     * 
+     * It is not intended to be called directly,
+     * only by the public Hide and Toggle methods.
+     * 
+     * It also disables unredirect so it works for fullscreen windows
+     * and tracks the visibility changes in the cursor so it can keep
+     * the cursor invisible.
+     */
+    private hideImpl() {
+        this.status = Status.hidden;
+        // Disable unredirect
+        this.compositor.disable_unredirect();
+        // Black out the screen
+        this.actor.add_effect(this.effect);
+        // Make cursor permanently invisible
+        this.cursorWatcherId = this.cursorTracker.connect(
+            'visibility-changed',
+            this.onVisibilityChanged.bind(this));
+        this.cursorTracker.set_pointer_visible(false);
+        // Signal Status changed
+        this.exportedObject?.emit_property_changed(
+            'Status',
+            GLib.Variant.new_uint32(this.status));
+    }
+
     /////////////////
     // Callbacks
     /////////////////
@@ -139,6 +190,7 @@ export default class Cloak {
   <interface name="org.mirolang.Lookout">\
     <method name="Hide"/>\
     <method name="Reveal"/>\
+    <method name="Toggle"/>\
     <property name="Status" type="u" access="read"/>\
   </interface>\
 </node>';
@@ -160,29 +212,12 @@ export default class Cloak {
      * 
      * Does nothing if the screen is already hidden
      * and signals Status changed if necessary.
-     * 
-     * It also disables unredirect so it works for fullscreen windows
-     * and tracks the visibility changes in the cursor so it can keep
-     * the cursor invisible.
      */
     Hide() {
         console.debug('Lookout [debug]: Hide() invoked');
         // Do nothing if already hidden
         if (this.status === Status.visible) {
-            this.status = Status.hidden;
-            // Disable unredirect
-            this.compositor.disable_unredirect();
-            // Black out the screen
-            this.actor.add_effect(this.effect);
-            // Make cursor permanently invisible
-            this.cursorWatcherId = this.cursorTracker.connect(
-                'visibility-changed',
-                this.onVisibilityChanged.bind(this));
-            this.cursorTracker.set_pointer_visible(false);
-            // Signal Status changed
-            this.exportedObject?.emit_property_changed(
-                'Status',
-                GLib.Variant.new_uint32(this.status));
+            this.hideImpl()
         }
     }
 
@@ -191,25 +226,33 @@ export default class Cloak {
      * 
      * Does nothing if the screen is already normal
      * and signals Status changed if necessary.
-     * 
-     * It also re-enables unredirect for performance and untracks 
-     * the visibility changes in the cursor so it can keep.
      */
     Reveal() {
         console.debug('Lookout [debug]: Reveal() invoked');
         // Do nothing if already visible
         if (this.status === Status.hidden) {
-            this.status = Status.visible;
-            // Reenable unredirect
-            this.compositor.enable_unredirect();
-            // Reveal the screen
-            this.actor.remove_effect(this.effect);
-            // Stop keeping the cursor hidden
-            this.cursorTracker.disconnect(this.cursorWatcherId)
-            // Signal Status changed
-            this.exportedObject?.emit_property_changed(
-                'Status',
-                GLib.Variant.new_uint32(this.status));
+            this.revealImpl()
+        }
+    }
+
+    /**
+     * Toggles the status of the screen.
+     * 
+     * Intended to reduce DBus roundtrips.
+     * It is implemented without calling Hide and Reveal
+     */
+    Toggle() {
+        console.debug('Lookout [debug]: Toggle() invoked');
+        switch (this.status) {
+            case Status.hidden:
+                this.revealImpl()
+                console.debug('Lookout [debug]: Toggle() made visible');
+                break;
+
+            case Status.visible:
+                this.hideImpl()
+                console.debug('Lookout [debug]: Toggle() made hidden');
+                break;
         }
     }
 }

@@ -25,7 +25,7 @@ export default class Lookout extends Extension {
     private addKeybinding(name: string, handler: Meta.KeyHandlerFunc) {
         // If it didn't fail, set the keybinding
         if (this.gsettings != null) {
-            console.debug(`Lookout [debug]: Fetch shortcut: ${this.gsettings.get_value('reveal-shortcut')?.deepUnpack()} (might change later)`);
+            console.debug(`Lookout [debug]: Fetch shortcut "${name}": "${this.gsettings.get_value(name)?.deepUnpack()}" (might change later)`);
             // AddKeybinding returns a number
             // for now we only need it to check for success
             let code = this.windowManager.addKeybinding(
@@ -35,12 +35,12 @@ export default class Lookout extends Extension {
                 Shell.ActionMode.ALL,       // Always available
                 handler);                   // Run handler when pressed
             if (code === Meta.KeyBindingAction.NONE) {
-                console.debug(`Lookout [debug]: Shortcut registered with ID ${code}`);
+                console.debug(`Lookout [debug]: Shortcut registered "${name}" with ID ${code}`);
             } else {
-                console.error('Lookout [error]: Failed to register shortcut, returned "Meta.KeyBindingAction.NONE');
+                console.error(`Lookout [error]: Failed to register shortcut "${name}", returned "Meta.KeyBindingAction.NONE`);
             }
         } else {
-            console.error(`Lookout [error]: Failed to register shortcut, prefs not set`);
+            console.error(`Lookout [error]: Failed to register shortcut "${name}", prefs not set`);
         }
     }
 
@@ -76,6 +76,7 @@ export default class Lookout extends Extension {
         // Add keybindings
         this.addKeybinding('reveal-shortcut', this.cloak.Reveal.bind(this.cloak));
         this.addKeybinding('hide-shortcut', this.cloak.Hide.bind(this.cloak));
+        this.addKeybinding('toggle-shortcut', this.cloak.Toggle.bind(this.cloak));
     }
 
     /**
@@ -89,6 +90,7 @@ export default class Lookout extends Extension {
         // Remove keybindings
         this.removeKeybinding('reveal-shortcut');
         this.removeKeybinding('hide-shortcut');
+        this.removeKeybinding('toggle-shortcut');
         // Destroy settings
         this.gsettings = undefined;
         // Close and destroy service

@@ -21,5 +21,10 @@
       <summary>Hide the screen</summary>
       <description>Hide the screen and the cursor</description>
 		</key>
+    <key name="toggle-shortcut" type="as">
+			<default><![CDATA[ [] ]]></default>
+      <summary>Hide the screen</summary>
+      <description>Hide the screen and the cursor</description>
+		</key>
   </schema>
 </schemalist>
