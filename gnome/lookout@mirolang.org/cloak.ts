@@ -30,15 +30,18 @@ export default class Cloak {
      * Before deleting the object, `close()` must be invoked to close DBus
      * and to cleanup the screen
      * 
+     * @param {string} basePath - the basepath of the extension where to find the interface schema
      * @param {Clutter.Actor} actor - the main actor to hide
      * @param {Meta.Compositor} compositor - the compositor to disable unredirect on
      * @param {Meta.CursorTracker} cursorTracker - the tracker for the cursor to hide
      */
     constructor(
+        basePath: string,
         actor: Clutter.Actor,
         compositor: Meta.Compositor,
         cursorTracker: Meta.CursorTracker,
     ) {
+        this.interfaceSchema = GLib.file_get_contents(`${basePath}/schemas/org.mirolang.Lookout.xml`)[1].toString();
         this.status = Status.visible;
         this.actor = actor;
         this.compositor = compositor;
@@ -182,18 +185,7 @@ export default class Cloak {
     // DBus
     /////////////////
 
-    /**
-     * XML schema for the DBus interface.
-     */
-    readonly interfaceSchema = '\
-<node>\
-  <interface name="org.mirolang.Lookout">\
-    <method name="Hide"/>\
-    <method name="Reveal"/>\
-    <method name="Toggle"/>\
-    <property name="Status" type="u" access="read"/>\
-  </interface>\
-</node>';
+    readonly interfaceSchema;
 
     /**
      * Status read-only property.

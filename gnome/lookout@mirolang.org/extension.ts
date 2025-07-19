@@ -60,10 +60,12 @@ export default class Lookout extends Extension {
      * and binds the keyboard shortcut to `service.Reveal()`.
      */
     enable() {
+        console.debug(`Lookout [debug]: ${Extension.lookupByUUID("lookout@mirolang.org")?.path}`);
         console.debug('Lookout [debug]: Enabling');
         // Create the service object immediately,
         // so the DBus object is available as soon as possible 
         this.cloak = new Cloak(
+            `${Extension.lookupByUUID("lookout@mirolang.org")?.path}`,
             global.stage,
             global.compositor,
             global.backend.get_cursor_tracker());
